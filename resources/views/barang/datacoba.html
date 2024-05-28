@@ -1,0 +1,97 @@
+@extends('barang.template.layout')
+@section('content_datatable')
+<div class="card">
+    <div class="card-header d-flex justify-content-between">
+        <div class="header-title">
+            <h4 class="card-title">Daftar Barang</h4>
+        </div>
+        <select name="lokasi" id="lokasi">
+            <option value="">Select Lokasi</option>
+            @if ($tableBarang->count() > 0)
+                @foreach ($tableBarang->unique('lokasi.nama_lokasi') as $barang)
+                    <option value="{{ $barang->lokasi->nama_lokasi }}">{{ $barang->lokasi->nama_lokasi }}</option>
+                @endforeach
+            @endif
+        </select>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped" id="barang-table">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Kode Barang</th>
+                        <th>Nama Barang</th>
+                        <th>Lokasi</th>
+                        <th>Tipe</th>
+                        <th>Status Barang</th>
+                        <th>Kondisi</th>
+                        <th>Tindakan</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody">
+                    @foreach($tableBarang as $barang)
+                    <tr>
+                        <td>{{ $loop->iteration }}</td>
+                        <td>{{ $barang->kode_barang }}</td>
+                        <td>{{ $barang->nama_barang }}</td>
+                        <td>{{ $barang->lokasi->nama_lokasi }}</td>
+                        <td>{{ $barang->type->nama_type }}</td>
+                        <td>{{ $barang->status_barang }}</td>
+                        <td>{{ $barang->kondisi }}</td>
+                        <td>
+                            <form action="{{ route('barang.destroy', $barang->id) }}" method="POST" style="display:inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus barang ini?')">Hapus</button>
+                            </form>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function(){
+        $("#lokasi").on('change', function() {
+            var category = $(this).val();
+            $.ajax({
+                url: "{{ route('filter.barang') }}",
+                type: "GET",
+                data: { 'category': category },
+                success: function(data) {
+                    var products = data.products;
+                    var html = '';
+                    if (products.length > 0) {
+                        for (let i = 0; i < products.length; i++) {
+                            html += '<tr>\
+                                        <td>' + (i + 1) + '</td>\
+                                        <td>' + products[i].kode_barang + '</td>\
+                                        <td>' + products[i].nama_barang + '</td>\
+                                        <td>' + products[i].lokasi.nama_lokasi + '</td>\
+                                        <td>' + products[i].type.nama_type + '</td>\
+                                        <td>' + products[i].status_barang + '</td>\
+                                        <td>' + products[i].kondisi + '</td>\
+                                        <td>\
+                                            <form action="{{ route('barang.destroy', '') }}/' + products[i].id + '" method="POST" style="display:inline;">\
+                                                @csrf\
+                                                @method('DELETE')\
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm(\'Apakah Anda yakin ingin menghapus barang ini?\')">Hapus</button>\
+                                            </form>\
+                                        </td>\
+                                     </tr>';
+                        }
+                    } else {
+                        html = '<tr><td colspan="8" class="text-center">No data found</td></tr>';
+                    }
+                    $("#tbody").html(html);
+                }
+            });
+        });
+    });
+</script>
+@endsection
